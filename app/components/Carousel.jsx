@@ -6,6 +6,7 @@ const Carousel = () => {
     { image: '/slide1.png', alt: 'Slide 1' },
     { image: '/slide2.png', alt: 'Slide 2' },
     { image: '/slide3.png', alt: 'Slide 3' },
+    { image: '/slide4.png', alt: 'Slide 4' },
 
   ];
 

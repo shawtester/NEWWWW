@@ -6,12 +6,12 @@ import {
   getDocs,
 } from "firebase/firestore";
 
-// Utility function to convert Firestore Timestamps to ISO strings
+
 const convertTimestampToISO = (timestamp) => {
   if (timestamp?.seconds) {
     return new Date(timestamp.seconds * 1000).toISOString();
   }
-  return timestamp; // Return as-is if not a timestamp object
+  return timestamp; 
 };
 
 export const getCollection = async ({ id }) => {
@@ -19,7 +19,7 @@ export const getCollection = async ({ id }) => {
   if (data.exists()) {
     const collectionData = data.data();
 
-    // Convert any complex fields to simpler values
+  
     if (collectionData.timestampCreate) {
       collectionData.timestampCreate = convertTimestampToISO(collectionData.timestampCreate);
     }
@@ -42,7 +42,7 @@ export const getCollections = async () => {
       collectionData.timestampCreate = convertTimestampToISO(collectionData.timestampCreate);
     }
 
-    // Add additional conversions if necessary for other complex fields
+  
 
     return collectionData;
   });

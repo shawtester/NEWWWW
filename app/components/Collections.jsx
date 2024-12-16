@@ -1,20 +1,43 @@
 "use client";
 
-import { Button } from "@nextui-org/react";
-import { collection } from "firebase/firestore";
-import { Heart } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import "./Collection.css"; // Add loader styles here
 
 export default function Collections({ collections }) {
-  var settings = {
+  const [inView, setInView] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // State for loader
+  const sectionRef = useRef(null);
+
+  // Intersection Observer to detect when section is in view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setInView(entry.isIntersecting);
+      },
+      { threshold: 0.5 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
+  const settings = {
     dots: true,
     infinite: false,
     speed: 500,
-    slidesToShow: 2,
-    slidesToScroll: 2,
+    slidesToShow: 4,
+    slidesToScroll: 4,
     initialSlide: 0,
     responsive: [
       {
@@ -44,51 +67,88 @@ export default function Collections({ collections }) {
     ],
   };
 
-  if (collections.length === 0) {
-    return <></>;
+  if (!collections || collections.length === 0) {
+    return null;
   }
 
-  return (
-    <div className="overflow-hidden md:p-10 p-5">
-      {/* Heading for the Collections */}
-      <h2 className="text-2xl md:text-3xl font-bold mb-5">Collections</h2>
+  const handleCollectionClick = () => {
+    setIsLoading(true); // Show loader
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2000); // Simulate delay
+  };
 
+  return (
+    <div ref={sectionRef} className="overflow-hidden md:p-10 p-5">
+      <h2 className="text-3xl md:text-4xl font-extrabold mb-8 text-center text-gray-800 tracking-wide">
+        Discover Our Collections
+      </h2>
+
+      {/* Loader */}
+      {isLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div className="loading">
+            <svg width="64px" height="48px">
+              <polyline
+                points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24"
+                id="back"
+              ></polyline>
+              <polyline
+                points="0.157 23.954, 14 23.954, 21.843 48, 43 0, 50 24, 64 24"
+                id="front"
+              ></polyline>
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Slider */}
       <Slider {...settings}>
-        {(collections?.length <= 2
-          ? [...collections, ...collections, ...collections]
-          : collections
-        )?.map((collection, index) => {
-          return (
-            <div className="px-2" key={collection?.id || `collection-${index}`}>
-              <div className="flex gap-4 bg-gradient-to-tr to-[#d9e2f1] from-[#cce7f5] p-7 w-full rounded-xl h-full">
-                <div className="w-full flex flex-col gap-2">
-                  <div className="flex flex-col gap-4">
-                    <h1 className="md:text-lg text-base font-semibold">
-                      {collection?.title}
-                    </h1>
-                    <h1 className="text-gray-600 text-xs md:text-sm max-w-96 line-clamp-2">
-                      {collection?.subTitle}
-                    </h1>
-                  </div>
-                  <div className="flex gap-4">
-                    <Link href={`/collections/${collection?.id}`}>
-                      <button className="bg-blue-500 text-white text-xs md:text-sm px-4 py-2 rounded-lg">
-                        SHOP NOW
-                      </button>
-                    </Link>
-                  </div>
+        {collections.map((collection, index) => (
+          <div className="px-4" key={`${collection?.id}-${index}`}>
+            <div
+              className="relative flex flex-col items-center bg-gradient-to-tr from-blue-100 via-white to-blue-50 shadow-lg p-6 rounded-xl hover:shadow-2xl transition-shadow duration-300 overflow-hidden collection-card"
+              style={{
+                borderRadius: "20px",
+                height: "350px",
+                backgroundImage: `url('/CollectionBack.png')`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/30 to-white/10 z-0"></div>
+              <div className="relative z-10 flex flex-col items-center gap-6">
+                <div className="text-center">
+                  <h1 className="text-xl md:text-2xl font-extrabold text-black font-bold tracking-wide font-serif">
+                    {collection?.title}
+                  </h1>
                 </div>
-                <div className="w-full">
+
+                {/* Clickable Image */}
+                <Link href={`/collections/${collection?.id}`}>
                   <img
-                    className="h-[4rem] md:h-[9rem] object-cover"
-                    src={collection?.imageURL}
+                    onClick={handleCollectionClick}
+                    className={`h-48 md:h-48 object-cover rounded-lg border-4 border-white shadow-xl transition-transform duration-300 collection-image ${
+                      inView ? "animate-sway" : ""
+                    }`}
+                    src={collection?.imageUrl}
                     alt={collection?.title}
                   />
-                </div>
+                </Link>
+
+                <Link href={`/collections/${collection?.id}`}>
+  <button
+    onClick={handleCollectionClick}
+    className="relative z-10 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-full text-xs md:text-sm font-medium hover:bg-purple-700 hover:scale-105 transition-transform duration-200"
+  >
+    Shop Now
+  </button>
+</Link>
+
               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </Slider>
     </div>
   );

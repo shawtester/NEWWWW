@@ -1,4 +1,4 @@
-import { ProductCard } from "@/app/components/Products";
+import {ProductCard}  from "@/app/components/Products";
 import { getProductsByCategory } from "@/lib/firestore/products/read_server";
 
 export default async function RelatedProducts({ categoryId }) {

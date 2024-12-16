@@ -1,6 +1,8 @@
 import { ProductCard } from "@/app/components/Products";
 import { getCollection } from "@/lib/firestore/collections/read_server";
 import { getProduct } from "@/lib/firestore/products/read_server";
+import Header from "@/app/components/Header";
+import Footer from "@/app/components/Footer";
 
 export async function generateMetadata({ params }) {
   const { collectionId } = params;
@@ -18,27 +20,44 @@ export async function generateMetadata({ params }) {
 export default async function Page({ params }) {
   const { collectionId } = params;
   const collection = await getCollection({ id: collectionId });
+
   return (
-    <main className="flex justify-center p-5 md:px-10 md:py-5 w-full">
-      <div className="flex flex-col gap-6 max-w-[900px] p-5">
-        <div className="w-full flex justify-center">
-          <img className="h-[110px]" src={collection?.imageURL} alt="" />
+    <>
+      <Header />
+
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-r from-blue-50 to-green-50 py-8  px-5 md:px-16">
+        <div className="flex flex-col items-center gap-4 max-w-4xl mx-auto">
+        
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 text-center">
+            {collection.title}
+          </h1>
+       
         </div>
-        <h1 className="text-center font-semibold text-4xl">
-          {collection.title}
-        </h1>
-        <h1 className="text-center text-gray-500">{collection.subTitle}</h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 justify-self-center justify-center items-center gap-4 md:gap-5">
-          {collection?.products?.map((productId) => {
-            return <Product productId={productId} key={productId} />;
-          })}
+      </section>
+
+      {/* Product Grid */}
+      <main className="flex justify-center p-5 md:px-10 md:py-10 w-full bg-gray-50">
+        <div className="flex flex-col gap-6 max-w-[1200px] w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {collection?.products?.map((productId) => (
+              <Product productId={productId} key={productId} />
+            ))}
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+
+      <Footer />
+    </>
   );
 }
 
 async function Product({ productId }) {
   const product = await getProduct({ id: productId });
-  return <ProductCard product={product} />;
+  return (
+    <ProductCard
+      product={product}
+      className="min-h-[300px] max-h-[400px] flex flex-col justify-between"
+    />
+  );
 }

@@ -1,10 +1,13 @@
-// app/reviews/page.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { FaStar } from "react-icons/fa";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
+import { Pagination, Navigation } from "swiper/modules";
 
-// Sample reviews tailored for whey protein products
 const reviews = [
   {
     id: 1,
@@ -48,57 +51,81 @@ export default function ReviewsPage() {
   const [displayedReviews, setDisplayedReviews] = useState([]);
 
   useEffect(() => {
-    // Simulating data fetching
     setDisplayedReviews(reviews);
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-r from-yellow-50 to-green-50">
-      <div className="max-w-5xl w-full">
-        <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
-          Customer Testimonials
+    <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+      <div className="max-w-6xl w-full">
+        {/* Heading */}
+        <h1 className="text-4xl font-bold text-center mb-10 text-gray-800 tracking-wide">
+          What Our Customers Say
         </h1>
+
+        {/* Review Slider */}
         {displayedReviews.length === 0 ? (
           <p className="text-center text-gray-500">No reviews available.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Swiper
+            slidesPerView={1}
+            spaceBetween={30}
+            loop={true}
+            pagination={{ clickable: true }}
+            navigation={true}
+            modules={[Pagination, Navigation]}
+            breakpoints={{
+              768: { slidesPerView: 2 }, // 2 slides for medium screens
+              1024: { slidesPerView: 3 }, // 3 slides for large screens
+            }}
+            className="mySwiper"
+          >
             {displayedReviews.map((review) => (
-              <div
-                key={review.id}
-                className="p-5 rounded-lg shadow-lg border-2 border-transparent hover:border-pink-400 hover:shadow-2xl transform transition-all duration-300 ease-in-out hover:-translate-y-2"
-                style={{
-                  background:
-                    review.product === "Whey Protein"
-                      ? "linear-gradient(135deg, #FFDDC1, #FF9A76)"
-                      : "linear-gradient(135deg, #B2F9FC, #82D8D8)",
-                }}
-              >
-                <div className="flex flex-col items-center mb-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-400 to-red-400 flex items-center justify-center text-white font-bold text-xl">
-                    {review.name.charAt(0)}
+              <SwiperSlide key={review.id}>
+                <div
+                  className="p-6 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-200 transition-transform transform hover:-translate-y-3 duration-300 ease-in-out bg-white"
+                >
+                  {/* Reviewer Info */}
+                  <div className="flex flex-col items-center mb-4">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 text-white flex items-center justify-center font-semibold text-xl shadow-md">
+                      {review.name.charAt(0)}
+                    </div>
+                    <h2 className="mt-2 text-lg font-semibold text-gray-800">
+                      {review.name}
+                    </h2>
+                    <span className="text-xs text-gray-500">{review.date}</span>
+                    <span className="text-sm italic text-blue-600 font-medium">
+                      {review.product}
+                    </span>
                   </div>
-                  <h2 className="text-lg font-semibold mt-2">{review.name}</h2>
-                  <span className="text-xs text-gray-400">{review.date}</span>
-                  <span className="text-sm italic text-gray-600">
-                    {review.product}
-                  </span>
+
+                  {/* Rating */}
+                  <div className="flex items-center justify-center gap-1 mb-3">
+                    {Array(5)
+                      .fill()
+                      .map((_, i) => (
+                        <FaStar
+                          key={i}
+                          className={`text-xl ${
+                            i < review.rating
+                              ? "text-yellow-400 scale-110"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                  </div>
+
+                  {/* Comment */}
+                  <p className="text-gray-700 text-center leading-relaxed">
+                    {review.comment}
+                  </p>
+
+                  {/* Decorative Line */}
+                  <div className="absolute top-2 left-2 w-8 h-1 bg-blue-400 rounded"></div>
+                  <div className="absolute bottom-2 right-2 w-8 h-1 bg-pink-400 rounded"></div>
                 </div>
-                <div className="flex items-center gap-1 mb-2 justify-center">
-                  {Array(5)
-                    .fill()
-                    .map((_, i) => (
-                      <FaStar
-                        key={i}
-                        className={`${
-                          i < review.rating ? "text-yellow-500" : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                </div>
-                <p className="text-gray-800 text-center">{review.comment}</p>
-              </div>
+              </SwiperSlide>
             ))}
-          </div>
+          </Swiper>
         )}
       </div>
     </div>

@@ -4,103 +4,140 @@ import { useState, useEffect } from "react";
 import { getBrand } from "@/lib/firestore/brands/read_server";
 import { getCategory } from "@/lib/firestore/categories/read_server";
 import Link from "next/link";
-import AddToCartButton from "@/app/components/AddToCartButton"; // Import the AddToCartButton component
-import AuthContextProvider from "@/context/AuthContext"; // Wrap it with AuthContextProvider if needed
+import AddToCartButton from "@/app/components/AddToCartButton";
+import AuthContextProvider from "@/context/AuthContext";
 
 export default function Details({ product }) {
-  console.log(product?.flavors[0]
+  const handleFlavorChange = (flavor) => {
+    setSelectedFlavor(flavor);
+  };
 
-  );
-  
   const [selectedWeight, setSelectedWeight] = useState(product?.weights[0]);
-  const [selectedFlavor, setSelectedFlavor] = useState(product?.flavors[0]); // Add flavor state
+  const [selectedFlavor, setSelectedFlavor] = useState(product?.flavors[0]);
   const [price, setPrice] = useState(product?.weights[0]?.salePrice || product?.weights[0]?.price);
 
   useEffect(() => {
-    // Update price when the selected weight or flavor changes
     if (selectedWeight) {
       setPrice(selectedWeight.salePrice || selectedWeight.price);
     }
-  }, [selectedWeight, selectedFlavor]); // Dependency includes selectedFlavor
+  }, [selectedWeight, selectedFlavor]);
 
   return (
-    <div className="w-full flex flex-col gap-3">
-      <div className="flex gap-3">
+    <div className="w-full flex flex-col gap-5">
+      {/* Category and Brand Section */}
+      <div className="flex gap-4 mt-5">
         <Category categoryId={product?.categoryId} />
         <Brand brandId={product?.brandId} />
       </div>
-      <h1 className="font-semibold text-xl md:text-4xl">{product?.title}</h1>
+
+      {/* Product Title and Description */}
+      <h1 className="font-semibold text-xl md:text-3xl">{product?.title}</h1>
       <h2 className="text-gray-600 text-sm line-clamp-3 md:line-clamp-4">
         {product?.shortDescription}
       </h2>
-      <div className="flex gap-3 items-center mt-3">
-        <h3 className="text-green-500 font-bold text-lg">
-          ₹ {price}{" "}
+
+      {/* Price Section with Attractive Styling */}
+      <div className="flex gap-3 items-center mt-3 bg-gradient-to-r from-indigo-200 via-indigo-100 to-indigo-50 p-4 rounded-lg shadow-lg">
+        <div className="flex flex-col items-start">
+          <h3 className="text-3xl font-bold text-green-500">
+            ₹ {price}
+            {selectedWeight?.salePrice && (
+              <>
+                <span className="text-lg line-through text-gray-600 ml-2">
+                  ₹ {selectedWeight?.price}
+                </span>
+                <span className="text-sm text-yellow-500 bg-red-600 px-2 py-1 rounded-full ml-2">
+                  {((1 - price / selectedWeight?.price) * 100).toFixed(0)}% OFF
+                </span>
+              </>
+            )}
+          </h3>
           {selectedWeight?.salePrice && (
-            <span className="line-through text-gray-700 text-sm">
-              ₹ {selectedWeight?.price}
+            <span className="text-xs text-gray-500 mt-1">
+              Hurry, offer valid for a limited time!
             </span>
           )}
-        </h3>
-
-        {/* Weight Selection */}
-        <div className="flex items-center gap-3">
-          <label htmlFor="weight-select" className="text-sm font-semibold">Select Weight:</label>
-          <select
-            id="weight-select"
-            className="border rounded-md p-2"
-            value={selectedWeight?.weight}
-            onChange={(e) => {
-              const weight = product?.weights.find(w => w.weight === e.target.value);
-              setSelectedWeight(weight);
-            }}
-          >
-            {product?.weights.map((weightOption) => (
-              <option key={weightOption.weight} value={weightOption.weight}>
-                {weightOption.weight} kg
-              </option>
-            ))}
-          </select>
         </div>
-
-        {/* Flavor Selection */}
-        <div className="flex items-center gap-3">
-          <label htmlFor="flavor-select" className="text-sm font-semibold">Select Flavor:</label>
-          <select
-            id="flavor-select"
-            className="border rounded-md p-2"
-            value={selectedFlavor}
-            onChange={(e) => setSelectedFlavor(e.target.value)}
-          >
-            {product?.flavors?.map((flavor) => (
-              <option key={flavor.name} value={flavor.name}>
-                {flavor.name}
-              </option>
-            ))}
-          </select>
+        {/* Sale Icon */}
+        <div className="flex items-center justify-center">
+          <img
+            src="/offer.png" 
+            alt="Sale"
+            className="h-20 w-20 ml-4 animate-pulse"
+          />
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 mt-3">
+      {/* Weight and Flavor Selection Section with Light Background Color */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+        {/* Weight Selection */}
+        <div className="flex flex-col gap-2 bg-indigo-50 p-4 rounded-lg shadow-sm">
+          <label className="text-lg font-semibold text-gray-700">Select Weight:</label>
+          <div className="flex gap-2 flex-wrap">
+            {product?.weights.map((weightOption) => (
+              <button
+                key={weightOption.weight}
+                onClick={() => setSelectedWeight(weightOption)}
+                className={`border-2 rounded-full px-5 py-2 text-lg font-semibold transition duration-300 ease-in-out transform ${
+                  selectedWeight?.weight === weightOption.weight
+                    ? "bg-indigo-600 text-white shadow-lg scale-105"
+                    : "bg-gray-100 text-indigo-600 hover:bg-indigo-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                }`}
+              >
+                {weightOption.weight} kg
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Flavor Selection with Light Background Color */}
+        <div className="flex flex-col gap-2 bg-teal-50 p-4 rounded-lg shadow-sm">
+          {product?.flavors?.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <label htmlFor="flavors" className="text-lg font-semibold text-gray-700">Flavor:</label>
+              <div className="flex gap-2 flex-wrap">
+                {product.flavors.map((flavor) => (
+                  <button
+                    key={flavor.name}
+                    onClick={() => handleFlavorChange(flavor)}
+                    className={`border-2 rounded-full px-5 py-2 text-lg font-semibold transition duration-300 ease-in-out transform ${
+                      selectedFlavor?.name === flavor.name
+                        ? "bg-teal-600 text-white shadow-lg scale-105"
+                        : "bg-gray-100 text-teal-600 hover:bg-teal-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+                    }`}
+                  >
+                    {flavor.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Add to Cart Button */}
+      <div className="flex items-center gap-4 w-full mt-4">
         <AuthContextProvider>
           <AddToCartButton
             productId={product?.id}
             selectedWeight={selectedWeight}
-            selectedFlavor={selectedFlavor} // Pass selected flavor
-            price={price}
+            selectedFlavor={selectedFlavor}
+            price={selectedWeight?.price}
             salePrice={selectedWeight?.salePrice}
           />
         </AuthContextProvider>
       </div>
 
+      {/* Out of Stock Notice */}
       {product?.stock <= (product?.orders ?? 0) && (
-        <div className="flex">
+        <div className="flex mt-4">
           <h3 className="text-red-500 py-1 rounded-lg text-sm font-semibold">
             Out Of Stock
           </h3>
         </div>
       )}
 
+      {/* Product Description */}
       <div className="flex flex-col gap-2 py-2">
         <div
           className="text-gray-600"
@@ -111,7 +148,6 @@ export default function Details({ product }) {
   );
 }
 
-// Fetch category data in a client-side hook
 function Category({ categoryId }) {
   const [category, setCategory] = useState(null);
 
@@ -127,15 +163,14 @@ function Category({ categoryId }) {
 
   return (
     <Link href={`/categories/${categoryId}`}>
-      <div className="flex items-center gap-1 border px-3 py-1 rounded-full">
-        <img className="h-4" src={category?.imageURL} alt={category?.name} />
-        <h4 className="text-xs font-semibold">{category?.name}</h4>
+      <div className="flex items-center gap-3 border-2 border-indigo-300 bg-indigo-50 px-4 py-2 rounded-full shadow-md hover:bg-indigo-100 transition duration-300 ease-in-out transform hover:scale-105">
+        <img className="h-8 w-8 rounded-full" src={category?.imageURL} alt={category?.name} />
+        <h4 className="text-lg font-semibold text-indigo-800">{category?.name}</h4>
       </div>
     </Link>
   );
 }
 
-// Fetch brand data in a client-side hook
 function Brand({ brandId }) {
   const [brand, setBrand] = useState(null);
 
@@ -150,9 +185,9 @@ function Brand({ brandId }) {
   if (!brand) return <div>Loading...</div>;
 
   return (
-    <div className="flex items-center gap-1 border px-3 py-1 rounded-full">
-      <img className="h-4" src={brand?.imageURL} alt={brand?.name} />
-      <h4 className="text-xs font-semibold">{brand?.name}</h4>
+    <div className="flex items-center gap-3 border-2 border-teal-300 bg-teal-50 px-4 py-2 rounded-full shadow-md hover:bg-teal-100 transition duration-300 ease-in-out transform hover:scale-105">
+      <img className="h-8 w-8 rounded-full" src={brand?.imageURL} alt={brand?.name} />
+      <h4 className="text-lg font-semibold text-teal-800">{brand?.name}</h4>
     </div>
   );
 }

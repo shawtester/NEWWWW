@@ -68,13 +68,13 @@ function ProductItem({ item }) {
 
   // Effect to update price when selected weight changes
   useEffect(() => {
-    if (selectedWeight) {
+    if (selectedWeight && product?.weights?.length > 0) {
       const selected = product?.weights?.find(w => w?.weight === selectedWeight);
       setPrice(selected?.price || 0);
       setSalePrice(selected?.salePrice || 0);
       handleLiveUpdate(selectedWeight, selectedFlavor, item?.quantity);
     }
-  }, [selectedWeight]);
+  }, [selectedWeight, product?.weights, selectedFlavor]);
 
   // Live update on flavor change
   useEffect(() => {
@@ -200,16 +200,20 @@ function ProductItem({ item }) {
 
       {/* Remove Button */}
       <Button
-        onClick={handleRemove}
-        isLoading={isRemoving}
-        isDisabled={isRemoving}
-        isIconOnly
-        color="error"
-        size="sm"
-        className="mt-4"
-      >
-        <X size={16} />
-      </Button>
+  onClick={!isRemoving ? handleRemove : null} // Prevent additional clicks during processing
+  isLoading={isRemoving} // Show loading state
+  disabled={isRemoving} // Disable the button while processing
+  isIconOnly
+  color="error"
+  size="sm"
+  className={`mt-4 ${isRemoving ? "cursor-not-allowed opacity-50" : ""}`} // Add visual feedback when disabled
+>
+  {isRemoving ? "Processing..." : <X size={16} />} {/* Show "Processing..." when loading */}
+</Button>
+
+
+
+
     </div>
   );
 }

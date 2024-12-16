@@ -7,29 +7,38 @@ import AddReview from "./components/AddReview";
 import AuthContextProvider from "@/context/AuthContext";
 
 export async function generateMetadata({ params }) {
-  const { productId } = params;
+  // Await params to avoid the error
+  const { productId } = await params;
   const product = await getProduct({ id: productId });
 
   return {
     title: `${product?.title} | Product`,
     description: product?.shortDescription ?? "",
     openGraph: {
-      images: [product?.featureImageURL],
+      images: [product?.imageList[0]],
     },
   };
 }
 
 export default async function Page({ params }) {
-  const { productId } = params;
+  // Await params to avoid the error
+  const { productId } = await params;
   const product = await getProduct({ id: productId });
+
   return (
     <main className="p-5 md:p-10">
-      <section className="flex flex-col-reverse md:flex-row gap-3">
+      {/* Section for Photos and Details */}
+      <section className="flex flex-col md:flex-row gap-3">
+        {/* Photos component displayed first on small screens */}
         <Photos
           imageList={[product?.featureImageURL, ...(product?.imageList ?? [])]}
+          className="order-1 md:order-none"
         />
-        <Details product={product} />
+        {/* Details component displayed second on small screens */}
+        <Details product={product} className="order-2 md:order-none" />
       </section>
+
+      {/* Section for AddReview and Reviews */}
       <div className="flex justify-center py-10">
         <AuthContextProvider>
           <div className="flex flex-col md:flex-row gap-4 md:max-w-[900px] w-full">
@@ -38,6 +47,8 @@ export default async function Page({ params }) {
           </div>
         </AuthContextProvider>
       </div>
+
+      {/* Related Products Section */}
       <RelatedProducts categoryId={product?.categoryId} />
     </main>
   );

@@ -1,3 +1,6 @@
+"use client";
+
+import { getCollection } from "@/lib/firestore/collections/read_server";
 import { createNewCollection, updateCollection } from "@/lib/firestore/collections/write";
 import { useProduct, useProducts } from "@/lib/firestore/products/read";
 import { Button } from "@nextui-org/react";
@@ -5,22 +8,23 @@ import { X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import axios from "axios"; // Import Axios for Cloudinary upload
+import axios from "axios";
 
 export default function Form() {
   const [data, setData] = useState(null);
+  const [image, setImage] = useState(null); // image file state
+  const [imageUrl, setImageUrl] = useState(null); // URL of the uploaded image
   const [isLoading, setIsLoading] = useState(false);
-  const [image, setImage] = useState(null); // State for image file
   const { data: products } = useProducts({ pageLimit: 2000 });
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
 
-  // Fetch collection data if an ID exists (for updating)
+  // Fetch existing collection data if we're updating
   const fetchData = async () => {
     try {
-      const res = await getCollection({ id });
+      const res = await getCollection({ id: id });
       if (!res) {
         toast.error("Collection Not Found!");
       } else {
@@ -37,25 +41,39 @@ export default function Form() {
     }
   }, [id]);
 
-  // Cloudinary image upload function
-  const uploadImageToCloudinary = async (image) => {
+  // Handle image upload to Cloudinary
+  const uploadToCloudinary = async (file) => {
     const formData = new FormData();
-    formData.append("file", image);
-    formData.append("upload_preset", "NUTRIBOX"); // Replace with your preset
+    formData.append("file", file);
+    formData.append("upload_preset", "NUTRIBOX"); // Use your Cloudinary preset
+    formData.append("public_id", `${data?.id}_image_${Date.now()}`); // Unique public ID
+
     try {
+      setIsLoading(true); // Set loading state to true
       const response = await axios.post(
         `https://api.cloudinary.com/v1_1/dzk0kk3gh/image/upload`, // Replace with your Cloudinary cloud name
         formData
       );
-      return response.data.secure_url; // Return the image URL
+      const imageUrl = response.data.secure_url; // Get the URL of the uploaded image
+      setImageUrl(imageUrl); // Store the URL in state
+      toast.success("Image uploaded successfully!");
     } catch (error) {
       console.error("Error uploading image:", error);
-      toast.error("Failed to upload image to Cloudinary");
-      return null;
+      toast.error("Error uploading image. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Update form state data
+  // Handle image file change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file); // Set the selected file
+      uploadToCloudinary(file); // Upload to Cloudinary
+    }
+  };
+
   const handleData = (key, value) => {
     setData((prevData) => ({
       ...(prevData ?? {}),
@@ -63,48 +81,28 @@ export default function Form() {
     }));
   };
 
-  // Create new collection
   const handleCreate = async () => {
     setIsLoading(true);
     try {
-      if (!data?.title) {
-        toast.error("Title is required");
-        return;
-      }
-
-      let imageUrl = null;
-      if (image) {
-        imageUrl = await uploadImageToCloudinary(image);
-      }
-
-      await createNewCollection({ data: { ...data, imageURL: imageUrl } });
+      await createNewCollection({ data: { ...data, imageUrl }, image });
       toast.success("Successfully Created");
       setData(null);
-      setImage(null); // Clear image state after successful creation
+      setImage(null);
+      setImageUrl(null); // Reset after creation
     } catch (error) {
       toast.error(error?.message);
     }
     setIsLoading(false);
   };
 
-  // Update existing collection
   const handleUpdate = async () => {
     setIsLoading(true);
     try {
-      if (!data?.title) {
-        toast.error("Title is required");
-        return;
-      }
-
-      let imageUrl = data?.imageURL; // Keep the existing image URL if no new image is uploaded
-      if (image) {
-        imageUrl = await uploadImageToCloudinary(image);
-      }
-
-      await updateCollection({ data: { ...data, imageURL: imageUrl } });
+      await updateCollection({ data: { ...data, imageUrl }, image });
       toast.success("Successfully Updated");
       setData(null);
-      setImage(null); // Clear image state after successful update
+      setImage(null);
+      setImageUrl(null); // Reset after update
       router.push(`/admin/collections`);
     } catch (error) {
       toast.error(error?.message);
@@ -126,10 +124,26 @@ export default function Form() {
         }}
         className="flex flex-col gap-3"
       >
-        {/* Title Input */}
+        <div className="flex flex-col gap-1">
+          <label htmlFor="category-name" className="text-gray-500 text-sm">
+            Image <span className="text-red-500">*</span>{" "}
+          </label>
+          {imageUrl && (
+            <div className="flex justify-center items-center p-3">
+              <img className="h-20" src={imageUrl} alt="Uploaded" />
+            </div>
+          )}
+          <input
+            onChange={handleImageChange}
+            id="category-image"
+            name="category-image"
+            type="file"
+            className="border px-4 py-2 rounded-lg w-full"
+          />
+        </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="collection-title" className="text-gray-500 text-sm">
-            Title <span className="text-red-500">*</span>
+            Title <span className="text-red-500">*</span>{" "}
           </label>
           <input
             id="collection-title"
@@ -137,88 +151,79 @@ export default function Form() {
             type="text"
             placeholder="Enter Title"
             value={data?.title ?? ""}
-            onChange={(e) => handleData("title", e.target.value)}
+            onChange={(e) => {
+              handleData("title", e.target.value);
+            }}
             className="border px-4 py-2 rounded-lg w-full focus:outline-none"
           />
         </div>
-
-        {/* Subtitle Input */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="collection-sub-title" className="text-gray-500 text-sm">
-            Sub Title <span className="text-red-500">*</span>
+          <label
+            htmlFor="collection-sub-title"
+            className="text-gray-500 text-sm"
+          >
+            Sub Title <span className="text-red-500">*</span>{" "}
           </label>
           <input
             id="collection-sub-title"
             name="collection-sub-title"
             type="text"
             value={data?.subTitle ?? ""}
-            onChange={(e) => handleData("subTitle", e.target.value)}
+            onChange={(e) => {
+              handleData("subTitle", e.target.value);
+            }}
             placeholder="Enter Sub Title"
             className="border px-4 py-2 rounded-lg w-full focus:outline-none"
           />
         </div>
-
-        {/* Product Selection */}
+        <div className="flex flex-wrap gap-3">
+          {data?.products?.map((productId) => {
+            return (
+              <ProductCard
+                productId={productId}
+                key={productId}
+                setData={setData}
+              />
+            );
+          })}
+        </div>
         <div className="flex flex-col gap-1">
-          <label htmlFor="collection-products" className="text-gray-500 text-sm">
-            Select Product <span className="text-red-500">*</span>
+          <label
+            htmlFor="collection-products"
+            className="text-gray-500 text-sm"
+          >
+            Select Product <span className="text-red-500">*</span>{" "}
           </label>
           <select
             id="collection-products"
             name="collection-products"
+            type="text"
             onChange={(e) => {
               setData((prevData) => {
-                const list = [...(prevData?.products ?? []), e.target.value];
-                return { ...prevData, products: list };
+                let list = [...(prevData?.products ?? [])];
+                list.push(e.target.value);
+                return {
+                  ...prevData,
+                  products: list,
+                };
               });
             }}
             className="border px-4 py-2 rounded-lg w-full focus:outline-none"
           >
             <option value="">Select Product</option>
-            {products?.map((item) => (
-              <option
-                key={item?.id}
-                disabled={data?.products?.includes(item?.id)}
-                value={item?.id}
-              >
-                {item?.title}
-              </option>
-            ))}
+            {products?.map((item) => {
+              return (
+                <option
+                  disabled={data?.products?.includes(item?.id)}
+                  value={item?.id}
+                  key={item?.id}
+                >
+                  {item?.title}
+                </option>
+              );
+            })}
           </select>
         </div>
-
-        {/* Display Selected Products */}
-        <div className="flex flex-wrap gap-3">
-          {data?.products?.map((productId) => (
-            <ProductCard
-              productId={productId}
-              key={productId}
-              setData={setData}
-            />
-          ))}
-        </div>
-
-        {/* Image Upload Field */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="collection-image" className="text-gray-500 text-sm">
-            Upload Image
-          </label>
-          <input
-            type="file"
-            id="collection-image"
-            name="collection-image"
-            accept="image/*"
-            onChange={(e) => setImage(e.target.files[0])}
-            className="border px-4 py-2 rounded-lg w-full"
-          />
-          {image && (
-            <div className="mt-2">
-              <p>Selected image: {image.name}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Submit Button */}
         <Button isLoading={isLoading} isDisabled={isLoading} type="submit">
           {id ? "Update" : "Create"}
         </Button>
@@ -227,9 +232,8 @@ export default function Form() {
   );
 }
 
-// Component to Display Selected Products
 function ProductCard({ productId, setData }) {
-  const { data: product } = useProduct({ productId });
+  const { data: product } = useProduct({ productId: productId });
   return (
     <div className="flex gap-3 bg-blue-500 text-white px-4 py-1 rounded-full text-sm">
       <h2>{product?.title}</h2>
@@ -237,8 +241,12 @@ function ProductCard({ productId, setData }) {
         onClick={(e) => {
           e.preventDefault();
           setData((prevData) => {
-            const list = prevData?.products?.filter((item) => item !== productId);
-            return { ...prevData, products: list };
+            let list = [...prevData?.products];
+            list = list?.filter((item) => item != productId);
+            return {
+              ...prevData,
+              products: list,
+            };
           });
         }}
       >

@@ -122,6 +122,7 @@ function SignInWithGoogleComponent() {
         uid: user?.uid,
         displayName: user?.displayName,
         photoURL: user?.photoURL,
+        email: user?.email, // Pass the email
       });
     } catch (error) {
       toast.error(error?.message);
