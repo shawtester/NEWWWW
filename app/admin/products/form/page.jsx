@@ -1,5 +1,5 @@
-"use client";
 
+"use client";
 import { useEffect, useState } from "react";
 import BasicDetails from "./components/BasicDetails";
 import Images from "./components/Images";
@@ -57,7 +57,12 @@ export default function Page() {
     console.log("Creating product with data:", data); // Log the data being sent
     try {
       await createNewProduct({
-        data: data,
+        data: {
+          ...data,
+          vegType: data?.vegType ?? "veg",  // Ensure vegType is included
+          flavors: data?.flavors ?? [],
+          weights: data?.weights ?? [],
+        },
         featureImage: featureImage,
         imageList: imageList,
       });
@@ -74,10 +79,15 @@ export default function Page() {
 
   const handleUpdate = async () => {
     setIsLoading(true);
-    console.log("Updating product with data:", data.flavors); // Log the data being sent
+    console.log("Updating product with data:", data); // Log the data being sent
     try {
       await updateProduct({
-        data: data,
+        data: {
+          ...data,
+          vegType: data?.vegType ?? "veg",  // Ensure vegType is included
+          flavors: data?.flavors ?? [],
+          weights: data?.weights ?? [],
+        },
         featureImage: featureImage,
         imageList: imageList,
       });
@@ -94,7 +104,7 @@ export default function Page() {
   };
 
   return (
-    <div className="pt-20 min-h-screen overflow-hidden">
+    <div className="min-h-screen overflow-hidden">
       <form
         onSubmit={(e) => {
           e.preventDefault();

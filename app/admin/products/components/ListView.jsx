@@ -51,33 +51,22 @@ export default function ListView() {
   if (error) {
     return <div>{error}</div>;
   }
+
   return (
     <div className="flex-1 flex flex-col gap-3 md:pr-5 md:px-0 px-5 rounded-xl w-full overflow-x-auto">
       <table className="border-separate border-spacing-y-3">
         <thead>
           <tr>
-            <th className="font-semibold border-y bg-white px-3 py-2 border-l rounded-l-lg">
-              SN
-            </th>
+            <th className="font-semibold border-y bg-white px-3 py-2 border-l rounded-l-lg">SN</th>
             <th className="font-semibold border-y bg-white px-3 py-2">Image</th>
-            <th className="font-semibold border-y bg-white px-3 py-2 text-left">
-              Title
-            </th>
-            <th className="font-semibold border-y bg-white px-3 py-2 text-left">
-              Price
-            </th>
-            <th className="font-semibold border-y bg-white px-3 py-2 text-left">
-              Stock
-            </th>
-            <th className="font-semibold border-y bg-white px-3 py-2 text-left">
-              Orders
-            </th>
-            <th className="font-semibold border-y bg-white px-3 py-2 text-left">
-              Status
-            </th>
-            <th className="font-semibold border-y bg-white px-3 py-2 border-r rounded-r-lg text-center">
-              Actions
-            </th>
+            <th className="font-semibold border-y bg-white px-3 py-2 text-left">Title</th>
+            <th className="font-semibold border-y bg-white px-3 py-2 text-left">Sale Price</th> {/* Swapped with Price */}
+            <th className="font-semibold border-y bg-white px-3 py-2 text-left">Price</th> {/* Swapped with Sale Price */}
+            <th className="font-semibold border-y bg-white px-3 py-2 text-left">Stock</th>
+            <th className="font-semibold border-y bg-white px-3 py-2 text-left">Orders</th>
+            <th className="font-semibold border-y bg-white px-3 py-2 text-left">Status</th>
+            <th className="font-semibold border-y bg-white px-3 py-2 text-left">Veg Type</th> {/* Veg Type */}
+            <th className="font-semibold border-y bg-white px-3 py-2 border-r rounded-r-lg text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -154,9 +143,7 @@ function Row({ item, index }) {
 
   return (
     <tr>
-      <td className="border-y bg-white px-3 py-2 border-l rounded-l-lg text-center">
-        {index + 1}
-      </td>
+      <td className="border-y bg-white px-3 py-2 border-l rounded-l-lg text-center">{index + 1}</td>
       <td className="border-y bg-white px-3 py-2 text-center">
         <div className="flex justify-center">
           <img
@@ -175,17 +162,24 @@ function Row({ item, index }) {
         )}
       </td>
       <td className="border-y bg-white px-3 py-2 whitespace-nowrap">
-        {/* Display both price and sale price */}
+        {/* Display sale price */}
         <div className="flex gap-2 items-center">
-          
-            <span className="text-xs text-gray-500 line-through">
-              ₹ {salePrice}
-            </span>
-       
-          <span className="text-lg font-semibold">₹ {price}</span>
+          {salePrice && (
+            <span className="text-lg font-semibold text-red-500">₹ {salePrice}</span>
+          )}
         </div>
       </td>
-      <td className="border-y bg-white px-3 py-2">{item?.isInStock }</td>
+      <td className="border-y bg-white px-3 py-2 whitespace-nowrap">
+        {/* Display price */}
+        <div className="flex gap-2 items-center">
+          {price && (
+            <span className="text-xs text-gray-500 line-through">
+              ₹ {price}
+            </span>
+          )}
+        </div>
+      </td>
+      <td className="border-y bg-white px-3 py-2">{item?.isInStock}</td>
       <td className="border-y bg-white px-3 py-2">{item?.orders ?? 0}</td>
       <td className="border-y bg-white px-3 py-2">
         <div className="flex">
@@ -199,6 +193,12 @@ function Row({ item, index }) {
               Out Of Stock
             </div>
           )}
+        </div>
+      </td>
+      <td className="border-y bg-white px-3 py-2">
+        {/* Display Veg Type */}
+        <div className="text-sm font-semibold">
+          {item?.vegType === "veg" ? "Vegetarian" : "Non-Vegetarian"}
         </div>
       </td>
       <td className="border-y bg-white px-3 py-2 border-r rounded-r-lg">

@@ -16,6 +16,7 @@ export default function AddToCartButton({
   selectedFlavor,
   price,
   salePrice,
+  imageUrl
   
 }) {
   const { user } = useAuth();
@@ -41,6 +42,7 @@ export default function AddToCartButton({
         flavor: selectedFlavor?.name,
         price: price,
         salePrice: salePrice,
+        imageUrl: imageUrl,
       };
 
       if (isAdded) {

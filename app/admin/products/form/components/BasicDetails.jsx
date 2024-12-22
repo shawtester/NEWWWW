@@ -3,28 +3,29 @@
 import { useState, useEffect } from "react";
 import { useBrands } from "@/lib/firestore/brands/read";
 import { useCategories } from "@/lib/firestore/categories/read";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function BasicDetails({ data, handleData }) {
   const { data: brands } = useBrands();
   const { data: categories } = useCategories();
 
-  // State initialization using the data prop with appropriate fallbacks
   const [isFeatured, setIsFeatured] = useState(data?.isFeatured ?? "no");
   const [flavors, setFlavors] = useState(data?.flavors ?? [{ name: "" }]);
   const [weights, setWeights] = useState(
-    data?.weights ?? [{ weight: "", price: "", salePrice: "" }]
+    data?.weights ?? [{ weight: "", price: "", salePrice: "", imageUrl: [] }]
   );
   const [stock, setStock] = useState(data?.isInStock ?? 0);
+  const [vegType, setVegType] = useState(data?.vegType ?? "veg");
 
-  // Sync state with updated data prop
   useEffect(() => {
     setIsFeatured(data?.isFeatured ?? "no");
     setFlavors(data?.flavors ?? [{ name: "" }]);
-    setWeights(data?.weights ?? [{ weight: "", price: "", salePrice: "" }]);
+    setWeights(data?.weights ?? [{ weight: "", price: "", salePrice: "", imageUrl: [] }]);
     setStock(data?.isInStock ?? 0);
+    setVegType(data?.vegType ?? "veg");
   }, [data]);
 
-  // Event handlers
   const handleFeaturedChange = (e) => {
     const newFeaturedStatus = e.target.value;
     setIsFeatured(newFeaturedStatus);
@@ -35,6 +36,12 @@ export default function BasicDetails({ data, handleData }) {
     const newStock = parseInt(e.target.value, 10);
     setStock(newStock);
     handleData("isInStock", newStock);
+  };
+
+  const handleVegTypeChange = (e) => {
+    const newVegType = e.target.value;
+    setVegType(newVegType);
+    handleData("vegType", newVegType);
   };
 
   const handleFlavorChange = (index, value) => {
@@ -51,6 +58,39 @@ export default function BasicDetails({ data, handleData }) {
     handleData("weights", updatedWeights);
   };
 
+  const uploadToCloudinary = async (file, index) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "NUTRIBOX");
+    formData.append("public_id", `${data?.id}_weight_image_${index}_${Date.now()}`);
+
+    try {
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/dzk0kk3gh/image/upload`,
+        formData
+      );
+      const imageUrl = response.data.secure_url;
+
+      const updatedWeights = [...weights];
+      updatedWeights[index].imageUrl.push(imageUrl); // Add new image URL
+      setWeights(updatedWeights);
+      handleData("weights", updatedWeights);
+
+      toast.success("Image uploaded successfully!");
+    } catch (error) {
+      console.error("Image upload error:", error?.response?.data || error.message);
+      toast.error("Error uploading image. Please try again.");
+    }
+  };
+
+  const handleImageChange = (index, e) => {
+    const files = e.target.files;
+    if (files.length > 0) {
+      // Loop through selected files and upload each one
+      Array.from(files).forEach((file) => uploadToCloudinary(file, index));
+    }
+  };
+
   const addFlavor = () => {
     setFlavors([...flavors, { name: "" }]);
   };
@@ -62,7 +102,7 @@ export default function BasicDetails({ data, handleData }) {
   };
 
   const addWeight = () => {
-    setWeights([...weights, { weight: "", price: "", salePrice: "" }]);
+    setWeights([...weights, { weight: "", price: "", salePrice: "", imageUrl: [] }]);
   };
 
   const removeWeight = (index) => {
@@ -73,10 +113,10 @@ export default function BasicDetails({ data, handleData }) {
 
   return (
     <section className="flex-1 flex flex-col gap-3 bg-white rounded-xl p-4 border">
-      <h1 className="font-semibold">Basic Details</h1>
+      <h1 className="font-semibold text-lg">Basic Details</h1>
 
       <div className="flex flex-col gap-1">
-        <label className="text-gray-500 text-xs" htmlFor="product-title">
+        <label className="font-bold text-gray-500 text-xs" htmlFor="product-title">
           Product Name <span className="text-red-500">*</span>
         </label>
         <input
@@ -92,7 +132,7 @@ export default function BasicDetails({ data, handleData }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-gray-500 text-xs" htmlFor="product-short-description">
+        <label className="font-bold text-gray-500 text-xs" htmlFor="product-short-description">
           Short Description <span className="text-red-500">*</span>
         </label>
         <input
@@ -108,7 +148,7 @@ export default function BasicDetails({ data, handleData }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-gray-500 text-xs" htmlFor="product-brand">
+        <label className="font-bold text-gray-500 text-xs" htmlFor="product-brand">
           Brand <span className="text-red-500">*</span>
         </label>
         <select
@@ -129,7 +169,7 @@ export default function BasicDetails({ data, handleData }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-gray-500 text-xs" htmlFor="product-category">
+        <label className="font-bold text-gray-500 text-xs" htmlFor="product-category">
           Category <span className="text-red-500">*</span>
         </label>
         <select
@@ -150,7 +190,7 @@ export default function BasicDetails({ data, handleData }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-gray-500 text-xs" htmlFor="product-stock">
+        <label className="font-bold text-gray-500 text-xs" htmlFor="product-stock">
           In Stock <span className="text-red-500">*</span>
         </label>
         <input
@@ -166,7 +206,7 @@ export default function BasicDetails({ data, handleData }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-gray-500 text-xs" htmlFor="product-is-featured-product">
+        <label className="font-bold text-gray-500 text-xs" htmlFor="product-is-featured-product">
           Is Featured Product <span className="text-red-500">*</span>
         </label>
         <select
@@ -182,8 +222,25 @@ export default function BasicDetails({ data, handleData }) {
         </select>
       </div>
 
+      <div className="flex flex-col gap-1">
+        <label className="font-bold text-gray-500 text-xs" htmlFor="product-veg-type">
+          Veg / Non-Veg <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="product-veg-type"
+          name="product-veg-type"
+          value={vegType}
+          onChange={handleVegTypeChange}
+          className="border px-4 py-2 rounded-lg w-full outline-none"
+          required
+        >
+          <option value="veg">Veg</option>
+          <option value="non-veg">Non-Veg</option>
+        </select>
+      </div>
+
       <div className="flex flex-col gap-3 mt-4">
-        <h2 className="font-semibold">Flavors</h2>
+        <h2 className="font-bold">Flavors</h2>
         {flavors.map((flavor, index) => (
           <div key={index} className="flex gap-3">
             <input
@@ -204,33 +261,56 @@ export default function BasicDetails({ data, handleData }) {
       </div>
 
       <div className="flex flex-col gap-3 mt-4">
-        <h2 className="font-semibold">Weights & Prices</h2>
+        <h2 className="font-bold">Weights & Prices</h2>
         {weights.map((weight, index) => (
-          <div key={index} className="flex gap-3">
-            <input
-              type="text"
-              value={weight.weight}
-              onChange={(e) => handleWeightChange(index, "weight", e.target.value)}
-              placeholder="Weight (kg)"
-              className="border px-4 py-2 rounded-lg w-full outline-none"
-            />
-            <input
-              type="number"
-              value={weight.price}
-              onChange={(e) => handleWeightChange(index, "price", e.target.value)}
-              placeholder="Price"
-              className="border px-4 py-2 rounded-lg w-full outline-none"
-            />
-            <input
-              type="number"
-              value={weight.salePrice}
-              onChange={(e) => handleWeightChange(index, "salePrice", e.target.value)}
-              placeholder="Sale Price"
-              className="border px-4 py-2 rounded-lg w-full outline-none"
-            />
-            <button type="button" onClick={() => removeWeight(index)} className="text-red-500">
-              Remove
-            </button>
+          <div key={index} className="flex flex-col gap-3">
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={weight.weight}
+                onChange={(e) => handleWeightChange(index, "weight", e.target.value)}
+                placeholder="Weight (kg)"
+                className="border px-4 py-2 rounded-lg w-full outline-none"
+              />
+              <input
+                type="number"
+                value={weight.price}
+                onChange={(e) => handleWeightChange(index, "price", e.target.value)}
+                placeholder="Price"
+                className="border px-4 py-2 rounded-lg w-full outline-none"
+              />
+              <input
+                type="number"
+                value={weight.salePrice}
+                onChange={(e) => handleWeightChange(index, "salePrice", e.target.value)}
+                placeholder="Sale Price"
+                className="border px-4 py-2 rounded-lg w-full outline-none"
+              />
+              <button type="button" onClick={() => removeWeight(index)} className="text-red-500">
+                Remove
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              {weight.imageUrl?.map((image, imgIndex) => (
+                <div key={imgIndex} className="w-full p-2">
+                  <img
+                    src={image}
+                    alt={`Weight ${index} Image ${imgIndex}`}
+                    className="w-full h-auto object-cover rounded-lg"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 mt-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageChange(index, e)}
+                className="border px-4 py-2 rounded-lg w-full outline-none"
+                multiple
+              />
+            </div>
           </div>
         ))}
         <button type="button" onClick={addWeight} className="bg-blue-500 text-white py-2 rounded-lg w-full mt-4">

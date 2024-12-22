@@ -126,8 +126,8 @@ function ProductItem({ item }) {
         <div className="h-20 w-20 p-2">
           <img
             className="w-full h-full object-cover rounded-lg"
-            src={product?.imageList[0]}
-            alt=""
+            src={item?.imageUrl}  // Use imageUrl from cart data here
+            alt="Product"
           />
         </div>
         <div className="flex flex-col gap-2 w-full">
@@ -200,20 +200,16 @@ function ProductItem({ item }) {
 
       {/* Remove Button */}
       <Button
-  onClick={!isRemoving ? handleRemove : null} // Prevent additional clicks during processing
-  isLoading={isRemoving} // Show loading state
-  disabled={isRemoving} // Disable the button while processing
-  isIconOnly
-  color="error"
-  size="sm"
-  className={`mt-4 ${isRemoving ? "cursor-not-allowed opacity-50" : ""}`} // Add visual feedback when disabled
->
-  {isRemoving ? "Processing..." : <X size={16} />} {/* Show "Processing..." when loading */}
-</Button>
-
-
-
-
+        onClick={!isRemoving ? handleRemove : null} // Prevent additional clicks during processing
+        isLoading={isRemoving} // Show loading state
+        disabled={isRemoving} // Disable the button while processing
+        isIconOnly
+        color="error"
+        size="sm"
+        className={`mt-4 ${isRemoving ? "cursor-not-allowed opacity-50" : ""}`} // Add visual feedback when disabled
+      >
+        {isRemoving ? "Processing..." : <X size={16} />} {/* Show "Processing..." when loading */}
+      </Button>
     </div>
   );
 }

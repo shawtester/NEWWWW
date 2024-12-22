@@ -1,5 +1,4 @@
 import { getProduct } from "@/lib/firestore/products/read_server";
-import Photos from "./components/Photos";
 import Details from "./components/Details";
 import Reviews from "./components/Reviews";
 import RelatedProducts from "./components/RelatedProducts";
@@ -27,15 +26,10 @@ export default async function Page({ params }) {
 
   return (
     <main className="p-5 md:p-10">
-      {/* Section for Photos and Details */}
+      {/* Section for Details */}
       <section className="flex flex-col md:flex-row gap-3">
-        {/* Photos component displayed first on small screens */}
-        <Photos
-          imageList={[product?.featureImageURL, ...(product?.imageList ?? [])]}
-          className="order-1 md:order-none"
-        />
-        {/* Details component displayed second on small screens */}
-        <Details product={product} className="order-2 md:order-none" />
+        {/* Details component only */}
+        <Details product={product} className="order-1 md:order-none" />
       </section>
 
       {/* Section for AddReview and Reviews */}
