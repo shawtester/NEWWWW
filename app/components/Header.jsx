@@ -14,19 +14,12 @@ import AuthContextProvider, { useAuth } from "@/context/AuthContext";
 import { useUser } from "@/lib/firestore/user/read";
 import AdminButton from "./AdminButton";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuth();
-  const { data, error } = useUser({ uid: user?.uid }); // Assuming `useUser` doesn't provide `loading` directly
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (data || error) {
-      setLoading(false); // Data is loaded or error occurred
-    }
-  }, [data, error]);
+  const { data, error } = useUser({ uid: user?.uid });
 
   const menuList = [
     { name: "Home", link: "/" },
@@ -226,13 +219,6 @@ export default function Header() {
           <LogoutButton />
         </AuthContextProvider>
       </div>
-
-      {/* Show Loading Spinner when data is being fetched */}
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="w-8 h-8 border-4 border-t-4 border-gray-300 border-solid rounded-full animate-spin"></div>
-        </div>
-      )}
     </nav>
   );
 }
